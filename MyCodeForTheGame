@@ -1,0 +1,422 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+typedef struct card_s {
+    char color[10];
+    int value;
+    char action[15];
+    struct card_s *pt;
+} card;
+
+// Function prototypes
+void shuffle_deck(card *deck);
+void load_deck(card *deck);
+void deal_cards(card *deck, card **player1, card **player2, card ** center_row);
+void remove_from_hand(card **hand, int index);
+void add_card_to_hand(card **hand, card *new_card);
+void display_hand(card *hand);
+void display_center_row(card *center_row);
+int player_turn(card **player_hand, card **center_row, card *deck, int *deck_index);
+int calculate_score(card *hand);
+card* get_card_at_index(card *player_hand, int card_index);
+
+int main() {
+    card deck[108];
+    card *player1_hand = NULL;
+    card *player2_hand = NULL;
+    card *center_row = NULL;
+    int choice = 0, winner, player1_score, player2_score, deck_index = 0;
+
+    printf("Let's Play DOS!\n");
+    printf("Press 1 to shuffle the deck or 2 to load a deck from a file: ");
+    scanf("%d", &choice);
+
+    if (choice == 1)  {
+    shuffle_deck(deck);
+    printf("The deck is shuffled. Press any key to deal cards\n");
+    getchar();
+    getchar();
+    }
+    else if(choice == 2)   {
+      printf("The deck is ready. Press any key to deal cards\n");
+      getchar();
+      getchar();
+      load_deck(deck);
+    }
+  else   {
+    printf("Not a valid selection, exiting program...");
+    return -9;
+  }
+
+    deal_cards(deck, &player1_hand, &player2_hand, &center_row);
+
+    printf("Player1's hand: \n");
+    display_hand(player1_hand);
+
+    printf("Player2's hand: ");
+    display_hand(player2_hand);
+
+    while (1) {
+        printf("\nPlayer 1's turn\n");
+        winner = player_turn(&player1_hand, &center_row, deck, &deck_index);
+        if (winner) {
+            player1_score = calculate_score(player2_hand);
+            printf("\nPlayer one wins with %d points!\n", player1_score);
+            break;
+        }
+
+        printf("\nPlayer 2's turn\n");
+        winner = player_turn(&player2_hand, &center_row, deck, &deck_index);
+        if (winner) {
+            player2_score = calculate_score(player1_hand);
+            printf("\nPlayer two wins with %d points!\n", player2_score);
+            break;
+        }
+    }
+
+    return 0;
+}
+
+// Function definitions
+
+void shuffle_deck(card *deck)  {
+    srand(time(NULL));
+
+    /*
+    for (int i = 1; i <= 10; i++) {
+        if (i != 2) {
+            card c;
+            c.value = i;
+            strcpy(c.action, "none");
+
+            strcpy(c.color, "red");
+            if (i >= 1 && i <= 5)
+                addToDeck(deck, c);
+            addToDeck(deck, c);
+            addToDeck(deck, c);
+           
+            strcpy(c.color, "blue");
+            if (i >= 1 && i <= 5)
+                addToDeck(deck, c);
+            addToDeck(deck, c);
+            addToDeck(deck, c);
+           
+            strcpy(c.color, "green");
+            if (i >= 1 && i <= 5)
+                addToDeck(deck, c);
+            addToDeck(deck, c);
+            addToDeck(deck, c);
+           
+            strcpy(c.color, "yellow");
+            if (i >= 1 && i <= 5)
+                addToDeck(deck, c);
+            addToDeck(deck, c);
+            addToDeck(deck, c);
+        }
+    }
+
+    card c;
+    c.value = 2;
+    strcpy(c.color, "anycolor");
+    strcpy(c.action, "anycolor");
+    for (int i = 1; i <= 12; i++) {
+        addToDeck(deck, c);
+    }
+
+    c.value = 0;
+    strcpy(c.color, "#");
+    strcpy(c.action, "#");
+    for (int i = 1; i <= 2; i++) {
+        strcpy(c.color, "red");
+        addToDeck(deck, c);
+           
+        strcpy(c.color, "blue");
+        addToDeck(deck, c);
+           
+        strcpy(c.color, "green");
+        addToDeck(deck, c);
+           
+        strcpy(c.color, "yellow");
+        addToDeck(deck, c);
+    }
+    */
+
+    // initialize DOS deck
+    int index = 0;
+    for (int i = 1; i <= 10; i++) {
+        if (i != 2) {
+            card c;
+            c.value = i;
+            strcpy(c.action, "none");
+
+            strcpy(c.color, "red");
+            if (i >= 1 && i <= 5)
+                deck[index++] = c;
+            deck[index++] = c;
+            deck[index++] = c;
+           
+            strcpy(c.color, "blue");
+            if (i >= 1 && i <= 5)
+                deck[index++] = c;
+            deck[index++] = c;
+            deck[index++] = c;
+           
+            strcpy(c.color, "green");
+            if (i >= 1 && i <= 5)
+                deck[index++] = c;
+            deck[index++] = c;
+            deck[index++] = c;
+           
+            strcpy(c.color, "yellow");
+            if (i >= 1 && i <= 5)
+                deck[index++] = c;
+            deck[index++] = c;
+            deck[index++] = c;
+        }
+    }
+
+
+    card c;
+    c.value = 2;
+    strcpy(c.color, "anycolor");
+    strcpy(c.action, "anycolor");
+    for (int i = 1; i <= 12; i++) {
+        deck[index++] = c;
+    }
+
+    c.value = 0;
+    strcpy(c.color, "#");
+    strcpy(c.action, "#");
+    for (int i = 1; i <= 2; i++) {
+        strcpy(c.color, "red");
+        deck[index++] = c;
+           
+        strcpy(c.color, "blue");
+        deck[index++] = c;
+           
+        strcpy(c.color, "green");
+        deck[index++] = c;
+           
+        strcpy(c.color, "yellow");
+        deck[index++] = c;
+    }
+
+    for (int i = 0; i < 108; i++) {
+        printf("%s %d %s\n", deck[i].color, deck[i].value, deck[i].action);
+    }
+
+    // Shuffle the deck
+  for (int i = 107; i > 0; i--) {   //Fisher-Yates algorithm
+        int random_index = rand() % (i + 1);
+        card temp = deck[i];
+        deck[i] = deck[random_index];
+        deck[random_index] = temp;
+    }
+}
+
+void load_deck(card *deck) {
+    FILE *file = fopen("filename5.txt", "r");
+    if (file == NULL) {
+        printf("Error opening file!");
+        exit(1);
+    }
+
+    int i = 0;
+    while (fscanf(file, "%s %d %s", deck[i].color, &deck[i].value, deck[i].action) == 3) {
+        i++;
+   }
+
+    fclose(file);
+}
+
+void deal_cards(card *deck, card **player1, card **player2, card** center_row) {
+  //TODO
+  int deck_index= 0;
+  // We want to deal 7 cards to each player
+  for(int i= 0; i < 7; i++)   {
+        add_card_to_hand(player1, &deck[deck_index]);
+        deck_index++;
+        add_card_to_hand(player2, &deck[deck_index]);
+        deck_index++;
+    }
+
+    // Set up  center row with 2 cards
+    add_card_to_hand(center_row, &deck[deck_index]);
+    deck_index++;
+    add_card_to_hand(center_row, &deck[deck_index]);
+    deck_index++;
+    card *center_card1 = *center_row;
+    card *center_card2 = center_card1->pt;
+
+    printf("Centerline %d %s, %d %s\n", center_card1->value, center_card1->color,
+           center_card2->value, center_card2->color);
+
+  }
+
+
+ void add_card_to_hand(card **hand, card *new_card) {
+    card *new_hand_card = (card *)malloc(sizeof(card));
+    if (new_hand_card == NULL) {
+        printf("Error: Out of memory.");
+        return;
+    }
+
+    strcpy(new_hand_card->color, new_card->color);
+    new_hand_card->value = new_card->value;
+    strcpy(new_hand_card->action, new_card->action);
+    new_hand_card->pt = NULL;
+
+    if (*hand == NULL)  {
+        *hand = new_hand_card;
+    }
+    else  {
+        card *current = *hand;
+        while (current->pt != NULL) {
+            current = current->pt;
+        }
+        current->pt = new_hand_card;
+    }
+}
+
+void remove_from_hand(card **hand, int index) {
+    if (*hand == NULL) {
+        return;
+    }
+    card *current = *hand;
+    card *previous = NULL;
+
+    for (int i = 0; i < index; i++) {
+        if (current == NULL) {
+            return;
+        }
+        previous = current;
+        current = current->pt;
+    }
+
+    if (previous == NULL) {
+        *hand = current->pt;
+    } else {
+        previous->pt = current->pt;
+    }
+}
+
+void display_hand(card *hand) {
+    card* current = hand;
+    while (current != NULL) {
+        printf("%d %s, ", current->value, current->color);
+        current = current->pt;
+    }
+    printf("\n");
+}
+
+void display_center_row(card *center_row) {
+    card* current = center_row;
+    printf("Center Row: ");
+    while (current != NULL) {
+        printf("%d %s, ", current->value, current->color);
+        current = current->pt;
+    }
+    printf("\n");
+}
+int calculate_score(card *hand) {
+    int score = 0;
+    card *current = hand;
+
+    while (current != NULL) {
+        score += current->value;
+        current = current->pt;
+    }
+
+    return score;
+}
+int player_turn(card **player_hand, card **center_row, card *deck, int *deck_index) {
+    //TODO
+    display_hand(*player_hand);
+    display_center_row(*center_row);
+
+    card *current_center_card = *center_row;
+    while (current_center_card != NULL) {
+        int num_cards;
+        printf("How many cards do you want to play on %d %s: ", current_center_card->value, current_center_card->color);
+        scanf("%d", &num_cards);
+
+        if (num_cards >= 1 && num_cards <= 2) {
+            int card_indices[num_cards];
+            printf("Select %d card(s) from 1 to the number of cards in hand: ", num_cards);
+            for (int i = 0; i < num_cards; i++) {
+                scanf("%d", &card_indices[i]);
+                card_indices[i]--;
+            }
+
+            int sum = 0;
+            for (int i = 0; i < num_cards; i++) {
+                card *selected_card = get_card_at_index(*player_hand, card_indices[i]);
+                if (selected_card != NULL) {
+                    sum += selected_card->value;
+                }
+            }
+
+            if (sum == current_center_card->value) {
+                for (int i = num_cards - 1; i >= 0; i--) {
+                    remove_from_hand(player_hand, card_indices[i]);
+                }
+
+                // Action to remove center card
+                card *temp = current_center_card;
+                *center_row = current_center_card->pt;
+                free(temp);
+
+                // Check for a color match
+                int color_match_count = 0;
+                for (int i = 0; i < num_cards; i++) {
+                    card *selected_card = get_card_at_index(*player_hand, card_indices[i]);
+                    if (selected_card != NULL && strcmp(selected_card->color, current_center_card->color) == 0) {
+                        color_match_count++;
+                    }
+                }
+
+                if (color_match_count > 0) {
+                    printf("You color matched and get to play %d card(s) on the center row.\n", color_match_count);
+                    for (int i = 0; i < color_match_count; i++) {
+                        int card_index;
+                        printf("Select one additional card from 1 to the number of cards in hand to place on the center row: ");
+                        scanf("%d", &card_index);
+                        card_index--;
+
+                        card *selected_card = get_card_at_index(*player_hand, card_index);
+                        if (selected_card != NULL) {
+                            add_card_to_hand(center_row, selected_card);
+                            remove_from_hand(player_hand, card_index);
+                        }
+                    }
+                }
+
+                current_center_card = *center_row;
+            }
+            else {
+                printf("That selection does not total to the center row card. Select again.\n");
+            }
+        }
+        else {
+            current_center_card = current_center_card->pt;
+        }
+    }
+    return *player_hand == NULL;
+}
+
+card* get_card_at_index(card *player_hand, int card_index) {
+    card *current = player_hand;
+    int count = 0;
+
+    while (current != NULL) {
+        if (count == card_index) {
+            return current;
+        }
+        count++;
+        current = current->pt;
+    }
+
+    return NULL;
+}
